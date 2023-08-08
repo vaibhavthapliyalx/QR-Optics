@@ -1,5 +1,5 @@
 /***************************************************************************************
- *  © 2023 Vaibhav Thapliyal
+ *  © 2023 Vaibhav Thapliyal.
  *  All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,12 +15,27 @@
  *  limitations under the License.
  ***************************************************************************************/
 
-import React from 'react';
-import { StyleSheet, View, Text, Button } from 'react-native';
-// import { useNavigation } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-const HomeScreen: React.FC = () => {
-  // const navigation = useNavigation();
+interface IProps {
+  displayHomeScreen: boolean;
+}
+
+export type RootStackParamList = {
+  ScanScreen: { handleScanSuccess: (data: string) => void } | undefined;
+};
+
+const HomeScreen: React.FC<IProps> = ({ displayHomeScreen }: IProps) => {
+  const [display, setDisplay] = useState<boolean>(false);
+
+  useEffect(() => {
+    setDisplay(displayHomeScreen);
+  }, [displayHomeScreen]);
+
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const handleScanSuccess = (data: string) => {
     console.log(data);
@@ -28,16 +43,22 @@ const HomeScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>QR Code Scanner App</Text>
-      <Text style={styles.description}>
-        Tap the button below to scan a QR code.
-      </Text>
-      <Button
-        title="Scan"
-        onPress={() => {}}
-      />
-    </View>
+    <>
+      {display && (
+        <View style={styles.container}>
+          <Text style={styles.title}>QR Code Scanner App</Text>
+          <Text style={styles.description}>
+            Tap the button below to scan a QR code.
+          </Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate('ScanScreen', { handleScanSuccess })}
+          >
+            <Text style={styles.buttonText}>Scan QR Code</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </>
   );
 };
 
@@ -56,6 +77,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 20,
     textAlign: 'center',
+  },
+  button: {
+    backgroundColor: '#2196F3',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 5,
+  },
+  buttonText: {
+    fontSize: 18,
+    color: 'white',
   },
 });
 
