@@ -1,6 +1,9 @@
 # This workflow is used for testing build updates and fixes.
-name: WattPay app Build-Testing
+name: Build Testing Pipeline
 on:
+  pull_request:
+    branches:
+      - '*'
   push:
     branches:
       - master
@@ -31,7 +34,7 @@ jobs:
         run: |
           cd android && ./gradlew assembleDebug
       - name: Upload Debug APK
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: ${{ steps.package.outputs.apkName }}-debug.apk
           path: android/app/build/outputs/apk/debug/

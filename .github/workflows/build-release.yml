@@ -1,4 +1,4 @@
-name: WattPay app Release
+name: Release Pipeline
 on:
   push:
     branches:
@@ -21,7 +21,7 @@ jobs:
           echo "Generating release asset..."
 
       - name: Upload Release Asset
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: ${{ steps.package.outputs.apkName }}-release-asset
           path: path/to/release/asset/directory
