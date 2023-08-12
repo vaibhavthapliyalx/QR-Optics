@@ -19,7 +19,6 @@ import { SafeAreaView, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ScanScreen from './android/src/components/ScanScreen';
-import HomeScreen from './android/src/components/HomeScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,11 +26,11 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="HomeScreen">
-        <Stack.Screen
+        {/* <Stack.Screen
           name="HomeScreen"
           component={() => <HomeScreen displayHomeScreen={true} />}
           options={{ headerShown: true }}
-        />
+        /> */}
         <Stack.Screen
           name="ScanScreen"
           component={() => <ScanScreen/>}
