@@ -14,80 +14,104 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  ***************************************************************************************/
-import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, Linking, Animated } from 'react-native';
+
+// React and Component imports.
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, TouchableOpacity, Text, Linking } from 'react-native';
 import { RNCamera } from 'react-native-camera';
 import QRCodeScanner from 'react-native-qrcode-scanner';
 
+/**
+ * @enum ScanStatus: Enum representing the possible states of QR code scanning.
+ *
+ * @member Detected: Indicates that a QR code has been detected by the scanner.
+ * @member Undetected: Indicates that no QR code has been detected.
+ */
+enum ScanStatus {
+  Detected,
+  Undetected,
+}
+
+/**
+ * @enum QRCodeType: Enum representing the possible types of QR codes.
+ * 
+ * @member None: No specific QR code type detected.
+ * @member URl: Indicates that the QR code contains a URL.
+ * @member Text: Indicates that the QR code contains plain text.
+ * @member Other: Indicates that the QR code contains content of another type. 
+ */
+enum QRCodeType {
+  None,
+  URL,
+  Text,
+  Other,
+}
+/**
+ * ScanScreen Component that renders screen from which QR Code can be scanned.
+ * 
+ * @returns ScanScreen Component.
+ */
 const ScanScreen = () => {
+  // State variables.
   const [qrCodeData, setQRCodeData] = useState<string | null>(null);
-  const [flashOn, setFlashOn] = useState(false);
-  const [scanStatus, setScanStatus] = useState<'none' | 'detected' | 'success'>('none');
-  const [successAnimation, setSuccessAnimation] = useState(false);
-  const successAnimationValue = useRef(new Animated.Value(0)).current;
+  const [flashOn, setFlashOn] = useState<boolean>(false);
+  const [QRType, setQRType] = useState<QRCodeType>(QRCodeType.Other);
+  const [scanStatus, setScanStatus] = useState<ScanStatus>(ScanStatus.Undetected);
 
-  const handleScanSuccess = (data: string) => {
-    setQRCodeData(data);
-    setSuccessAnimation(true);
-    playSuccessAnimation();
-  };
-
-  const playSuccessAnimation = () => {
-    Animated.sequence([
-      Animated.timing(successAnimationValue, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.timing(successAnimationValue, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setSuccessAnimation(false);
-    });
-  };
-
-  const generateQRCode = () => {
-    setQRCodeData(null);
-    setScanStatus('none'); // Reset scan status when generating a new QR code
-  };
-
-  const toggleFlash = () => {
-    setFlashOn(!flashOn);
-  };
-
-  const handleScanStatusChange = (status: boolean) => {
-    if (status) {
-      setScanStatus('detected');
+  /**
+   * @function Function that sets QR Data after successful QR Code Read.
+   * @param data An object that contains QR data received after QR read success. 
+   */
+  function setQRData(data: any) {
+    if (data.includes('http') || data.includes('https') || data.includes('www')) {
+      setQRType(QRCodeType.URL);
+    } else if (data.type === 'TEXT') {
+      setQRType(QRCodeType.Text);
     } else {
-      setScanStatus('none');
+      setQRType(QRCodeType.Other);
     }
-  };
+    setQRCodeData(data);
+  }
 
-  useEffect(() => {
-    // Initialize success animation value
-    successAnimationValue.setValue(0);
-  }, []);
+  /**
+   * @function Function to handle state of device's flashlight based on click of button.
+   */
+  function toggleFlash() {
+    setFlashOn(!flashOn);
+  }
 
+  /**
+   * @function Function that resets the QR Data, enables capturing new data.
+   */
+  function resetQRData() {
+    if (flashOn) {
+      setFlashOn(false);
+    }
+    setQRCodeData(null);
+    setQRType(QRCodeType.None);
+    setScanStatus(ScanStatus.Undetected); // Reset scan status.
+  }
+
+  // UseEffect performed to handle the QR data on each time new QR data is read.
   useEffect(() => {
-    if (qrCodeData) {
+    if (qrCodeData && QRType === QRCodeType.URL) {
       // Open the URL in the device's browser
       Linking.openURL(qrCodeData)
         .then((response) => {
           // Handle success
           console.log('Successfully opened URL:', qrCodeData);
-          setScanStatus('success');
         })
         .catch((error) => {
           // Handle error
           console.error('Error opening URL:', error);
-          setScanStatus('none'); // Reset scan status if opening URL failed
         });
     }
+
+    // Reset previous data allowing capturing new data.
+    resetQRData();
   }, [qrCodeData]);
 
+  /************* Render Function *************/
   return (
     <View style={styles.container}>
       <RNCamera
@@ -96,67 +120,31 @@ const ScanScreen = () => {
         flashMode={flashOn ? RNCamera.Constants.FlashMode.torch : RNCamera.Constants.FlashMode.off}
       >
         <QRCodeScanner
-          onRead={(e) => {
-            handleScanStatusChange(true);
-            handleScanSuccess(e.data);
+          onRead={(event) => {
+            setScanStatus(ScanStatus.Detected);
+            setQRData(event.data);
           }}
           showMarker={true}
-          markerStyle={[styles.marker, scanStatus === 'detected' && styles.markerDetected]}
+          markerStyle={[styles.marker, scanStatus === ScanStatus.Detected && styles.markerDetected]}
           reactivate={true}
           reactivateTimeout={2000}
         />
       </RNCamera>
-      {scanStatus === 'none' && (
+      {scanStatus === ScanStatus.Undetected && (
         <View style={styles.scanStatusContainer}>
           <View style={styles.scanStatusBox} />
           <Text style={styles.scanStatusText}>No QR Detected</Text>
         </View>
       )}
-      {scanStatus === 'detected' && (
+      {scanStatus === ScanStatus.Detected && (
         <View style={styles.scanStatusContainer}>
           <View style={[styles.scanStatusBox, styles.scanStatusDetectedBox]} />
           <Text style={styles.scanStatusText}>QR Detected</Text>
         </View>
       )}
-      {scanStatus === 'success' && (
-        <View style={styles.successAnimationContainer}>
-          <Animated.View
-            style={[
-              styles.successAnimation,
-              {
-                opacity: successAnimationValue,
-                transform: [
-                  {
-                    scale: successAnimationValue.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, 1],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          />
-        </View>
-      )}
       <TouchableOpacity style={styles.flashButton} onPress={toggleFlash}>
         <Text style={styles.flashButtonText}>{flashOn ? 'Flash Off' : 'Flash On'}</Text>
       </TouchableOpacity>
-      {qrCodeData && (
-        <>
-          <View style={styles.qrCodeContainer}>
-            <Text style={styles.qrCodeText}>Scanned QR Code:</Text>
-            <Text style={styles.qrCodeData}>{qrCodeData}</Text>
-          </View>
-          <TouchableOpacity style={styles.generateButton} onPress={generateQRCode}>
-            <Text style={styles.generateButtonText}>Scan More QR Codes</Text>
-          </TouchableOpacity>
-        </>
-      )}
-      {!qrCodeData && (
-        <TouchableOpacity style={styles.generateButton} onPress={generateQRCode}>
-          <Text style={styles.generateButtonText}>Generate QR Code</Text>
-        </TouchableOpacity>
-      )}
     </View>
   );
 };
@@ -194,17 +182,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginTop: 20,
   },
-  successAnimationContainer: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  successAnimation: {
-    width: 100,
-    height: 100,
-    backgroundColor: 'green',
-    borderRadius: 50,
-  },
   flashButton: {
     position: 'absolute',
     top: 20,
@@ -216,36 +193,6 @@ const styles = StyleSheet.create({
   flashButtonText: {
     color: '#FFF',
     fontSize: 16,
-  },
-  qrCodeContainer: {
-    position: 'absolute',
-    bottom: 50,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  qrCodeText: {
-    fontSize: 18,
-    marginBottom: 8,
-    color: 'white',
-  },
-  qrCodeData: {
-    fontSize: 16,
-    color: 'white',
-  },
-  generateButton: {
-    position: 'absolute',
-    bottom: 50,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    backgroundColor: '#2196F3',
-    padding: 12,
-    borderRadius: 5,
-  },
-  generateButtonText: {
-    fontSize: 18,
-    color: 'white',
   },
 });
 
