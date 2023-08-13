@@ -16,8 +16,10 @@
  ***************************************************************************************/
 
 // React and Component imports.
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, Linking } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Linking, Image } from 'react-native';
 import { RNCamera } from 'react-native-camera';
 import QRCodeScanner from 'react-native-qrcode-scanner';
 
@@ -57,6 +59,8 @@ const ScanScreen = () => {
   const [flashOn, setFlashOn] = useState<boolean>(false);
   const [QRType, setQRType] = useState<QRCodeType>(QRCodeType.Other);
   const [scanStatus, setScanStatus] = useState<ScanStatus>(ScanStatus.Undetected);
+
+  const navigation = useNavigation<NativeStackNavigationProp<any>>();
 
   /**
    * @function Function that sets QR Data after successful QR Code Read.
@@ -145,6 +149,15 @@ const ScanScreen = () => {
       <TouchableOpacity style={styles.flashButton} onPress={toggleFlash}>
         <Text style={styles.flashButtonText}>{flashOn ? 'Flash Off' : 'Flash On'}</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.iconContainer}
+        onPress={()=>navigation.navigate('AboutScreen')}
+      >
+      <Image
+        style={styles.iconImage}
+        source={require('../assets/info/info_icon.png')}
+      />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -193,6 +206,20 @@ const styles = StyleSheet.create({
   flashButtonText: {
     color: '#FFF',
     fontSize: 16,
+  },
+  iconContainer: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  iconImage: {
+    width: 38,
+    height: 38,
   },
 });
 
