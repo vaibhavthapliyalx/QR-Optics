@@ -15,26 +15,27 @@
  *  limitations under the License.
  ***************************************************************************************/
 import React from 'react';
-import { SafeAreaView, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ScanScreen from './android/src/components/ScanScreen';
+import AboutScreen from './android/src/components/AboutScreen';
 
 const Stack = createNativeStackNavigator();
 
 const App = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="HomeScreen">
-        {/* <Stack.Screen
-          name="HomeScreen"
-          component={() => <HomeScreen displayHomeScreen={true} />}
-          options={{ headerShown: true }}
-        /> */}
+      
+      <Stack.Navigator initialRouteName="ScanScreen">
         <Stack.Screen
           name="ScanScreen"
           component={() => <ScanScreen/>}
           options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AboutScreen"
+          component={() => <AboutScreen/>}
+          options={{ headerShown: true }}
         />
       </Stack.Navigator>
     </NavigationContainer>
